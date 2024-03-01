@@ -23,7 +23,7 @@ class Restaurant(Base):
 
 
 
-class Menus(Base):
+class Menu(Base):
     __tablename__="menus"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -34,7 +34,7 @@ class Menus(Base):
     rating = Column(Float)
 
 
-class Users(Base):
+class User(Base):
     __tablename__="users"
     id = Column(Integer, primary_key=True, index=True)
     userName = Column(String)

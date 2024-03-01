@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.ext.declarative import declarative_base
-from .models import Base  # Import your SQLAlchemy Base
+from database.models import Base  # Import your SQLAlchemy Base
 import asyncio
 
 DATABASE_URL = "mysql+aiomysql://root:example@localhost/mydatabase"
