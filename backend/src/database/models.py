@@ -26,21 +26,27 @@ class Restaurant(Base):
     longitude = Column(Float)
 
     rating = Column(Float)
-    description = Column(String)
+    # description = Column(String)
     websiteURL = Column(String(1024))
-    contactInfo = Column(String)
+    contactInfo = Column(String(16))
 
+    # new relationship to link restaurants to cusine types
     cusine_types = relationship(
         "CusineType",
         secondary=restaurant_cusine_association,
         backref="restaurants"
     )
 
+    menus = relationship("Menu", backref="restaurant")
+
 
 class CusineType(Base):
-    __tablename__="cusine_ypes"
+    __tablename__="cusine_types"
     id = Column(Integer, primary_key=True, index=True)
     typeName = Column(String(255),nullable=False)
+
+
+
 
 
 
@@ -48,8 +54,8 @@ class Menu(Base):
     __tablename__="menus"
 
     id = Column(Integer, primary_key=True, index=True)
-    restaurant_id = mapped_column(ForeignKey("restaurants.id"))
-    name = Column(String(128))
+    restaurant_id = Column(Integer, ForeignKey("restaurants.id"))
+    name = Column(String(128), nullable=False)
     price = Column(Float)
     imageURL = Column(String(1024))  # Should be limited to a reasonable size
     rating = Column(Float)
