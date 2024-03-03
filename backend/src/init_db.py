@@ -1,19 +1,18 @@
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base
 from database.models import Base  # Import your SQLAlchemy Base
-import asyncio
 
-DATABASE_URL = "mysql+aiomysql://root:example@localhost/mydatabase"
+DATABASE_URL = "mysql+pymysql://root:789745@localhost/favmenus"
 
-async def init_db(engine: AsyncEngine):
-    async with engine.begin() as conn:
-        # Drop all tables if you want a clean start, comment this out otherwise
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+def init_db():
+    # Create a synchronous engine
+    engine = create_engine(DATABASE_URL, echo=True)
+
+    # Drop all tables (comment this out if you don't want to drop tables every time)
+    Base.metadata.drop_all(engine)
+
+    # Create all tables
+    Base.metadata.create_all(engine)
 
 if __name__ == "__main__":
-    # Create an async engine instance
-    engine = create_async_engine(DATABASE_URL, echo=True)
-    
-    # Run the init_db function using asyncio
-    asyncio.run(init_db(engine))
+    init_db()
