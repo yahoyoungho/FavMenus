@@ -10,25 +10,27 @@ from pydantic import BaseModel
 import uvicorn
 import crud
 
+
+# todo: save below variables in .env
+# todo: pip install python-dotenv
+
 SECRET_KEY = "d8f4a0314a7705eae9e181d090437a3d3688196878fec417760c9ea4f392f094"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
-
+# todo: replace db to db query result of 
 fake_users_db = {
     "johndoe": {
-        "username": "johndoe",
+        "username": "johndoe@example.com",
         "first_name":"John",
         "last_name":"Doe",
-        "email": "johndoe@example.com",
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
         "disabled": False,
     },
     "alice": {
-        "username": "alice",
+        "username": "alice@example.com",
         "first_name": "Alice",
         "last_name": "Wonderland",
-        "email": "alice@example.com",
         "hashed_password": "fakehashedsecret2",
         "disabled": True,
     },
