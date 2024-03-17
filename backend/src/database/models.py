@@ -59,9 +59,18 @@ class Menu(Base):
 
 class User(Base):
     __tablename__="users"
+
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(128), nullable=False) #equivalent to email
     hashed_password = Column(String(100), nullable=False) # change to salt and pepper password after figuring out the login method
     first_name = Column(String(30), nullable=False)
     last_name = Column(String(50), nullable=False)
+    #todo: add role column
+
+class Role(Base):
+    __tablename__="roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    role_name = Column(String(64), unique=True)
+
 
