@@ -46,10 +46,6 @@ class CusineType(Base):
     typeName = Column(String(255),nullable=False)
 
 
-
-
-
-
 class Menu(Base):
     __tablename__="menus"
 
@@ -66,4 +62,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     userName = Column(String(128), nullable=False)
     email = Column(String(100), nullable=False)
-
+    hashed_password = Column(String(100), nullable=False) # change to salt and pepper password after figuring out the login method
+    first_name = Column(String(30), nullable=False)
+    last_name = Column(String(50), nullable=False)
+    
