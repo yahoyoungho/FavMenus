@@ -34,7 +34,7 @@ class Restaurant(Base):
     cusine_types = relationship(
         "CusineType",
         secondary=restaurant_cusine_association,
-        backref="restaurants"
+        backref="typeName"
     )
 
     menus = relationship("Menu", backref="restaurant")

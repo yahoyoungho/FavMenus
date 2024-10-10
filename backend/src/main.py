@@ -3,6 +3,10 @@ from typing import Annotated
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.openapi.docs import get_swagger_ui_html
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
@@ -15,68 +19,56 @@ load_dotenv(find_dotenv())
 import uvicorn
 import crud
 from data_struct import auth_var_struct, user_var_struct, restaurant_var_struct
+from helper import auth_script, user_script
 
-
-# SECRET_KEY = "d8f4a0314a7705eae9e181d090437a3d3688196878fec417760c9ea4f392f094"
 SECRET_KEY = str(os.environ.get("SECRET_KEY"))
-# ALGORITHM = "HS256"
 ALGORITHM = str(os.environ.get("ALGORITHM"))
-ACCESS_TOKEN_EXPIRE_MINUTES = 120
-# ACCESS_TOKEN_EXPIRE_MINUTES = os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES")
-
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 120))
 # todo: replace db to db query result of 
 fake_users_db = {
-    "johndoe": {
+    "johndoe@example.com": {
         "username": "johndoe@example.com",
         "first_name":"John",
         "last_name":"Doe",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
+        "hashed_password": "$2b$12$78nr5lkjZglzgTzbYg0hweWgvAT7JD0yHvQye9EZWdYkPIAce8HUa",
+        
         "disabled": False,
     },
     "alice": {
         "username": "alice@example.com",
         "first_name": "Alice",
         "last_name": "Wonderland",
-        "hashed_password": "fakehashedsecret2",
-        "disabled": True,
+        "hashed_password": "$2b$12$78nr5lkjZglzgTzbYg0hweWgvAT7JD0yHvQye9EZWdYkPIAce8HUa",
+        "disabled": False,
     },
 }
 
 
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-app = FastAPI()
+app = FastAPI(docs_url=None)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+# ============== EXCLUDED FROM SCHEMA ==============
+favicon_path = "favicon.ico"
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(favicon_path)
 
-def verify_password(raw_password, hashed_password):
-    return pwd_context.verify(raw_password, hashed_password)
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui_html():
+    return get_swagger_ui_html(openapi_url="/openapi.json",
+                               title="Favmenus API",
+                               swagger_favicon_url="/static/favicon.ico")
 
-def get_password_hash(password):
-    return  pwd_context.hash(password)
 
-def get_user(db, username:str):
-    if username in db:
-        user_dict = db[username]
-        return user_var_struct.UserInDB(**user_dict)
 
 def authenticate_user(fake_db, username:str, password:str):
-    user=get_user(fake_db, username)
+    user=user_script.get_user(fake_db, username)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not auth_script.verify_password(password, user.hashed_password):
         return False
     return user
 
-def create_access_token(data:dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp" : expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
@@ -91,7 +83,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         token_data = auth_var_struct.TokenData(username=username)
     except JWTError:
         raise credential_exception
-    user = get_user(fake_users_db, username=str(token_data.username))
+    user = user_script.get_user(fake_users_db, username=str(token_data.username))
     if user is None:
         raise credential_exception
     return user
@@ -105,7 +97,6 @@ async def get_current_active_user(
     return curernt_user
 
 # =========================== API LIST ==========================
-
 # ========================== POST METHOD ========================
 @app.post("/token")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> auth_var_struct.Token:
@@ -117,7 +108,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> a
             headers={"WWW-Authenticate":"Bearer"}
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
+    access_token = auth_script.create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return auth_var_struct.Token(access_token=access_token, token_type="bearer")
     # if not user_dict:
     #     raise HTTPException(status_code=400, detail="Incorrect User name or passowrd")
@@ -132,12 +123,19 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> a
 
 # ========================== GET METHOD ========================
 
+
 @app.get("/restaurants/")
 async def read_restaurants(skip: int = 0, limit: int = 10):
     restaurants = await crud.get_restaurants(skip=skip, limit=limit)
     return restaurants
 
+#todo read_restaurant_by_id
+@app.get("/restaurants/{restaurant_id}")
+async def read_restaurants_by_restaurant_id(restaurant_id:str):
+    ...
+
 # TODO: read_restaurants_submitted_by_user(user_id)
+
 
 # TODO: read_menus_from_restaurant(restautrant_id)
 
